@@ -1,0 +1,16 @@
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/simplex
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/simplex.deps.json
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/simplex.runtimeconfig.json
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/simplex.runtimeconfig.dev.json
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/simplex.dll
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/ref/simplex.dll
+/home/oem/Desktop/Sharp/simplex/bin/Debug/net5.0/simplex.pdb
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.csproj.AssemblyReference.cache
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.GeneratedMSBuildEditorConfig.editorconfig
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.AssemblyInfoInputs.cache
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.AssemblyInfo.cs
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.csproj.CoreCompileInputs.cache
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.dll
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/ref/simplex.dll
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.pdb
+/home/oem/Desktop/Sharp/simplex/obj/Debug/net5.0/simplex.genruntimeconfig.cache
