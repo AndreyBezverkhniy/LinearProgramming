@@ -162,13 +162,65 @@ class Canonic{
 
 class Program
 {
+    static void Simplex(Canonic canonic){
+        ///// стартовое допустимое решение
+        double[] delta=new double[canonic.m];
+        for(;;){
+            canonic.Print();
+            int e=-1;
+            for(int i=0;i<canonic.n;i++){
+                if(canonic.c[i]>0){
+                    e=i;
+                    break;
+                }
+            }
+            if(e==-1){
+                break;
+            }
+            for(int equality=0;equality<canonic.B.Length;equality++){
+                if(canonic.A[equality][e]>0){
+                    delta[equality]=canonic.b[equality]/canonic.A[equality][e];
+                } else {
+                    delta[equality]=double.PositiveInfinity;
+                }
+            }
+            Console.Write("delta: ");
+            for(int equality=0;equality<delta.Length;equality++){
+                Console.Write("{0}/{1}={2} ",canonic.b[equality],
+                    canonic.A[equality][e],delta[equality]);
+            }
+            Console.WriteLine();
+            int l_equality=0;
+            for(int i=1;i<canonic.B.Length;i++){
+                if(delta[i]<delta[l_equality]){
+                    l_equality=i;
+                }
+            }
+            if(double.IsPositiveInfinity(delta[l_equality])){
+                Console.WriteLine("Задача неограничена");
+                return;
+            } else {
+                int l=canonic.B[l_equality];
+                Console.WriteLine("e={0} l={1}",e,l);
+                canonic = canonic.Pivot(l,e);
+            }
+        }
+        double[] result=new double[canonic.n];
+        for(int i=0;i<canonic.n;i++){
+            result[i]=0;
+        }
+        for(int equality=0;equality<canonic.m;equality++){
+            result[canonic.B[equality]]=canonic.b[equality];
+        }
+        for(int i=0;i<result.Length;i++){
+            Console.Write("x{0}={1} ",i,result[i]);
+        }
+        Console.WriteLine();
+    }
     static void Main(string[] args)
     {
         Canonic canonic = new Canonic();
-        canonic.LoadFromFile("2.txt");
-        canonic.Print();
-        //canonic = canonic.Pivot(3,0);
-        canonic = canonic.Pivot(1,0);
-        canonic.Print();
+        canonic.LoadFromFile("simpInf.txt");
+        Simplex(canonic);
     }
 }
