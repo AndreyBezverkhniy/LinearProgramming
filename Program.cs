@@ -1,6 +1,67 @@
 ﻿using System;
 using System.IO;
 
+class Standartic{
+    public int n;
+    public int m;
+    public double[][] A;
+    public double[] b;
+    public double[] c;
+    public Standartic(){}
+    public void LoadFromFile(string path){
+        StreamReader R;
+        R = new StreamReader(path);
+        string str;
+        string[] strArr;
+        // n
+        n = int.Parse(R.ReadLine());
+        // m
+        m = int.Parse(R.ReadLine());
+        // c
+        str = R.ReadLine();
+        strArr = str.Split(" ");
+        c = new double[n];
+        for(int i=0;i<n;i++){
+            c[i]=double.Parse(strArr[i]);
+        }
+        // A & b
+        A = new double[m][];
+        for(int i=0;i<m;i++){
+            A[i]=new double[n];
+        }
+        b = new double[m];
+        for(int i=0;i<m;i++){
+            str = R.ReadLine();
+            strArr = str.Split(" ");
+            b[i] = double.Parse(strArr[n]);
+            for(int j=0;j<n;j++){
+                A[i][j]=double.Parse(strArr[j]);
+            }
+        }
+        R.Close();
+    }
+    public void Print(){
+        Console.WriteLine("Standartic");
+        Console.Write("z = ");
+        for(int i=0;i<n;i++){
+            if (i>0){
+                Console.Write(" + ");
+            }
+            Console.Write("({0})*x{1}",c[i],i);
+        }
+        Console.WriteLine();
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                if (j>0){
+                    Console.Write(" + ");
+                }
+                Console.Write("({0})*x{1}",A[i][j],j);
+            }
+            Console.WriteLine(" <= {0}",b[i]);
+        }
+    }
+}
+
 class Canonic{
     public int n;
     public int m;
@@ -219,8 +280,11 @@ class Program
     }
     static void Main(string[] args)
     {
-        Canonic canonic = new Canonic();
-        canonic.LoadFromFile("simpInf.txt");
-        Simplex(canonic);
+        //Canonic canonic = new Canonic();
+        //canonic.LoadFromFile("simpInf.txt");
+        //Simplex(canonic);
+        Standartic standartic = new Standartic();
+        standartic.LoadFromFile("stan1.txt");
+        standartic.Print();
     }
 }

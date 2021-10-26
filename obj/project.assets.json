@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/oem/Desktop/Sharp/simplex/simplex.csproj",
+      "projectUniqueName": "/home/oem/Desktop/Repos/simplex/simplex.csproj",
       "projectName": "simplex",
-      "projectPath": "/home/oem/Desktop/Sharp/simplex/simplex.csproj",
+      "projectPath": "/home/oem/Desktop/Repos/simplex/simplex.csproj",
       "packagesPath": "/home/oem/.nuget/packages/",
-      "outputPath": "/home/oem/Desktop/Sharp/simplex/obj/",
+      "outputPath": "/home/oem/Desktop/Repos/simplex/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/oem/.nuget/NuGet/NuGet.Config"
