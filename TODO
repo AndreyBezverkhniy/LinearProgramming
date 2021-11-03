@@ -1,4 +1,8 @@
 initializer
-return type
-basic cases testing
+cmd testing
+	standard.read
+	standard2canonic
+	pivot
+	simplex
+	initializer
 
