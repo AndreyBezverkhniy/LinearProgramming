@@ -493,7 +493,10 @@ class Program{
         standartic.Print();
     }
     static void ProcessStandarticToCanonic(string file){
-        Console.WriteLine("not implemented yet");
+        Standartic standartic=new Standartic();
+        standartic.LoadFromFile(file);
+        Canonic canonic = new Canonic(standartic);
+        canonic.Print();
     }
     static void ProcessPivot(string file){
         Console.WriteLine("not implemented yet");
@@ -507,6 +510,7 @@ class Program{
     static void Main(string[] args){
         if(args.Length!=2){
             Help();
+            return;
         }
         string srcFile=args[1];
         if(args[0]=="-sr"){
