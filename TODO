@@ -1,4 +1,3 @@
-initializer
 cmd testing
 	standard.read
 	standard2canonic

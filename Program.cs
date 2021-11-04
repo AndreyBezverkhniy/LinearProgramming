@@ -40,6 +40,18 @@ class Utils{
             }
         }
     }
+    public static void copyArrays(ref double[] dst,double[] src){
+        dst=new double[src.Length];
+        for(int i=0;i<src.Length;i++){
+            dst[i]=src[i];
+        }
+    }
+    public static void copyArrays(ref int[] dst,int[] src){
+        dst=new int[src.Length];
+        for(int i=0;i<src.Length;i++){
+            dst[i]=src[i];
+        }
+    }
 }
 
 class Standartic{
@@ -124,25 +136,18 @@ class Canonic{
     public double[] c; // новый вектор коэффициентов в целевой функции
     public double v; // значение целевой функции при 0-х небазисных переменных
     public Canonic(){} // по умолчанию ничего не существует
-    public Canonic(Canonic copy){
-        n=copy.n;
-        m=copy.m;
+    public Canonic(Canonic copy):this(copy.n,copy.m){
         v=copy.v;
-        B=new int[copy.B.Length];
         for(int i=0;i<B.Length;i++){
             B[i]=copy.B[i];
         }
-        b=new double[copy.b.Length];
         for(int i=0;i<b.Length;i++){
             b[i]=copy.b[i];
         }
-        c=new double[copy.c.Length];
         for(int i=0;i<c.Length;i++){
             c[i]=copy.c[i];
         }
-        A=new double[copy.A.Length][];
         for(int i=0;i<A.Length;i++){
-            A[i] = new double[copy.A[i].Length];
             for(int j=0;j<A[i].Length;j++){
                 A[i][j]=copy.A[i][j];
             }
@@ -180,6 +185,74 @@ class Canonic{
             b[i]=standartic.b[i];
         }
     }
+    public Canonic(Standartic standartic,Canonic canonic_aux)
+    :this(canonic_aux.n,canonic_aux.m){
+        // задачи должны совпадать по кол-ву исходных переменных и ограничений
+        if(canonic_aux.n!=standartic.n+standartic.m+1 ||
+        canonic_aux.m!=standartic.m){
+            throw new Exception();
+        }
+        // при необходимости выводим дополнительную переменную из юазиса
+        int additionalVariable=standartic.getAdditionalVariableIndexAUX();
+        int entering=-1;
+        int leaving;
+        if(Utils.DoesArrayConsistsElement(canonic_aux.B,additionalVariable)){
+            leaving=additionalVariable;
+            int equality=canonic_aux.equalityByBasic(additionalVariable);
+            for(int i=0;i<canonic_aux.n;i++){
+                if(canonic_aux.A[equality][i]>0){
+                    entering=i;
+                    break;
+                }
+            }
+            canonic_aux = canonic_aux.Pivot(leaving,entering);
+        }
+        // избавляемяс от дополнительной переменной
+        for(int j=0;j<m;j++){
+            for(int i=0;i<n;i++){
+                if(i<additionalVariable){
+                    A[j][i]=canonic_aux.A[j][i];
+                }
+                if(i>additionalVariable){
+                    A[j][i-1]=canonic_aux.A[j][i];
+                }
+            }
+        }
+        // берём неизменные данные
+        Utils.copyArrays(ref b,canonic_aux.b);
+        Utils.copyArrays(ref B,canonic_aux.B);
+        // возвращаем первоначальную функцию
+        v=0;
+        for(int i=0;i<n;i++){
+            if(i<standartic.n){
+                c[i]=standartic.c[i];
+            } else {
+                c[i]=0;
+            }
+        }
+        // избавляемся от базовых переменных в функции
+        for(int i=0;i<n;i++){
+            if(Utils.DoesArrayConsistsElement(B,i)){
+                // базовая перемнная i используется в z
+                int equation=B[i];
+                substituteVariableInEquation(i,A[equation],b[equation],ref c,ref v);
+            }
+        }
+    }
+    public Canonic(int _n,int _m){
+        if(_n<=_m){
+            throw new Exception();
+        }
+        n=_n;
+        m=_m;
+        b=new double[_m];
+        c=new double[_n];
+        A=new double[_m][];
+        for(int i=0;i<_m;i++){
+            A[i]=new double[_n];
+        }
+        B=new int[_m];
+    }
     public void Print(){
         Console.WriteLine("Canonic");
         Console.Write("z={0}",v);
@@ -195,7 +268,7 @@ class Canonic{
             Console.WriteLine();
         }
     }
-    private int equalityByBasic(int vIndex){
+    public int equalityByBasic(int vIndex){
         for(int i=0;i<m;i++){
             if(B[i]==vIndex){
                 return i;
@@ -288,8 +361,8 @@ class SimplexAnswer{
     }
 }
 
-class Program{
-    static SimplexAnswer Simplex(Standartic standartic){
+class Solution{
+    public static SimplexAnswer Simplex(Standartic standartic){
         // поиск начального допустимого решения
         SimplexAnswer startingSolution=Initialize(standartic);
         if(startingSolution.type!="solved"){
@@ -307,11 +380,11 @@ class Program{
                     break;
                 }
             }
-            // если все коэф-ты в z <=0 достигнуто оптимальное решение
+            // если вводимой переменной нет, достигнуто оптимальное решение
             if(e==-1){
                 break;
             }
-            // поиск максимального приращения вводимой переменной
+            // поиск возможных приращения вводимой переменной
             double[] delta=new double[canonic.m];
             for(int equality=0;equality<canonic.B.Length;equality++){
                 if(canonic.A[equality][e]>0){
@@ -337,13 +410,13 @@ class Program{
         }
         return new SimplexAnswer(canonic);
     }
-    static SimplexAnswer Initialize(Standartic standartic){
+    public static SimplexAnswer Initialize(Standartic standartic){
+        // проверка допустимости начального решения
         int index_min_b=standartic.getMinBIndex();
         Console.WriteLine("index_min_b={0}",index_min_b);
-        // пустимо ли начальное решение
         if(standartic.b[index_min_b]>=0){
             Console.WriteLine("Start sol ok");
-            return new Canonic(standartic);
+            return new SimplexAnswer(new Canonic(standartic));
         }
         
         // переходим к вспомогательной задаче
@@ -352,10 +425,11 @@ class Program{
 
         // выводимой переменной соответствует макс по модулю отрицательное b
         int leaving=c_aux.B[index_min_b];
-        int entering=aux.getAdditionalVariableIndexAUX();
+        int additionalVariable=aux.getAdditionalVariableIndexAUX();
+        int entering=additionalVariable;
         c_aux = c_aux.Pivot(leaving,entering);
 
-
+        // основной цикл поиска решения
         double[] delta=new double[c_aux.m];
         for(;;){
             //c_aux.Print();
@@ -392,27 +466,63 @@ class Program{
             //Console.WriteLine("e={0} l={1}",e,l);
             c_aux = c_aux.Pivot(l,e);
         }
+
         if(c_aux.getVariableXNValue(aux.n)!=0){
-            Console.WriteLine("Задача неразрешима");
-        } else {
-            if(Utils.DoesArrayConsistsElement(c_aux.B,aux.n)){
-                
-            }
+            return new SimplexAnswer("Задача неразрешима");
         }
-        return new Canonic();
+        
+        // переход от вспомогательной задачи к основной
+        Canonic canonic = new Canonic(standartic,c_aux);
+        return new SimplexAnswer(canonic);
     }
-    static void Main(string[] args)
-    {
-        //Canonic canonic = new Canonic();
-        //canonic.LoadFromFile("simpInf.txt");
-        //Simplex(canonic);
-        Standartic standartic = new Standartic();
-        standartic.LoadFromFile("stan1.txt");
+}
+
+class Program{
+    static void Help(){
+        Console.WriteLine("usage: -flag src-file");
+        Console.WriteLine("flags:");
+        Console.WriteLine("\t-sr standartic.read");
+        Console.WriteLine("\t-s2c standartic to canonic");
+        Console.WriteLine("\t-p pivot");
+        Console.WriteLine("\t-i initializer");
+        Console.WriteLine("\t-s simplex");
+    }
+    static void ProcessStandarticRead(string file){
+        Console.WriteLine("not implemented yet");
+        Standartic standartic=new Standartic();
+        standartic.LoadFromFile(file);
         standartic.Print();
-        Standartic aux;
-        aux = standartic.getAUX();
-        aux.Print();
-        //Canonic canonic = new Canonic();
-        //canonic = Initialize(standartic);
+    }
+    static void ProcessStandarticToCanonic(string file){
+        Console.WriteLine("not implemented yet");
+    }
+    static void ProcessPivot(string file){
+        Console.WriteLine("not implemented yet");
+    }
+    static void ProcessInitializer(string file){
+        Console.WriteLine("not implemented yet");
+    }
+    static void ProcessSimplex(string file){
+        Console.WriteLine("not implemented yet");
+    }
+    static void Main(string[] args){
+        if(args.Length!=2){
+            Help();
+        }
+        string srcFile=args[1];
+        if(args[0]=="-sr"){
+            ProcessStandarticRead(srcFile);
+        } else if(args[0]=="-s2c"){
+            ProcessStandarticToCanonic(srcFile);
+        } else if(args[0]=="-p"){
+            ProcessPivot(srcFile);
+        } else if(args[0]=="-i"){
+            ProcessInitializer(srcFile);
+        } else if(args[0]=="-s"){
+            ProcessSimplex(srcFile);
+        } else {
+            Console.WriteLine($"uncknown flag {args[0]}");
+            Help();
+        }
     }
 }
