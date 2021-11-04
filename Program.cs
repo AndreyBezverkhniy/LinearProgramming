@@ -71,7 +71,7 @@ class Standartic{
         file.Close();
     }
     public void Print(){
-        Console.WriteLine("Standartic");
+        //Console.WriteLine("Standartic");
         Console.Write("z = ");
         for(int i=0;i<n;i++){
             if (i>0){
@@ -488,7 +488,6 @@ class Program{
         Console.WriteLine("\t-s simplex");
     }
     static void ProcessStandarticRead(string file){
-        Console.WriteLine("not implemented yet");
         Standartic standartic=new Standartic();
         standartic.LoadFromFile(file);
         standartic.Print();
