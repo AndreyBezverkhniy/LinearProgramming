@@ -254,8 +254,8 @@ class Canonic{
         B=new int[_m];
     }
     public void Print(){
-        Console.WriteLine("Canonic");
-        Console.Write("z={0}",v);
+        //Console.WriteLine("Canonic");
+        Console.Write("z = {0}",v);
         for(int i=0;i<n;i++){
             Console.Write(" + ({0})*x{1}",c[i],i);
         }
@@ -479,13 +479,26 @@ class Solution{
 
 class Program{
     static void Help(){
-        Console.WriteLine("usage: -flag src-file");
-        Console.WriteLine("flags:");
-        Console.WriteLine("\t-sr standartic.read");
-        Console.WriteLine("\t-s2c standartic to canonic");
-        Console.WriteLine("\t-p pivot");
-        Console.WriteLine("\t-i initializer");
-        Console.WriteLine("\t-s simplex");
+        Console.WriteLine("usage:");
+        Console.WriteLine("\t-sr src-file");
+        Console.WriteLine("\t\treads task and shows in standard form");
+        Console.WriteLine("\t-s2c src-file");
+        Console.WriteLine("\t\treads task and shows in canonic form");
+        Console.WriteLine("\t-p src-file leaving entering");
+        Console.WriteLine("\t\treads task, applies pivot(leaving,entering) "+
+            "and shows resulting canonic form");
+        Console.WriteLine("\t-i src-file");
+        Console.WriteLine("\t\treads task, applies initializer "+
+            "and shows resulting canonic form");
+        Console.WriteLine("\t-s src-file");
+        Console.WriteLine("\t\treads task, solves it and shows answer");
+        Console.WriteLine("Format of task file:");
+        Console.WriteLine("\tn # оригинальных переменных\n"+
+            "\tm # уравнений\n"+
+            "\tc1 .. cn\n"+
+            "\t...\n"+
+            "\ta{Bi}1 ... a{Bi}n <= b{Bi}\n"+
+            "\t...");
     }
     static void ProcessStandarticRead(string file){
         Standartic standartic=new Standartic();
@@ -498,8 +511,12 @@ class Program{
         Canonic canonic = new Canonic(standartic);
         canonic.Print();
     }
-    static void ProcessPivot(string file){
-        Console.WriteLine("not implemented yet");
+    static void ProcessPivot(string file,int  leaving,int entering){
+        Standartic standartic=new Standartic();
+        standartic.LoadFromFile(file);
+        Canonic canonic = new Canonic(standartic);
+        canonic = canonic.Pivot(leaving,entering);
+        canonic.Print();
     }
     static void ProcessInitializer(string file){
         Console.WriteLine("not implemented yet");
@@ -508,23 +525,20 @@ class Program{
         Console.WriteLine("not implemented yet");
     }
     static void Main(string[] args){
-        if(args.Length!=2){
-            Help();
-            return;
-        }
         string srcFile=args[1];
-        if(args[0]=="-sr"){
+        if(args.Length==2 && args[0]=="-sr"){
             ProcessStandarticRead(srcFile);
-        } else if(args[0]=="-s2c"){
+        } else if(args.Length==2 && args[0]=="-s2c"){
             ProcessStandarticToCanonic(srcFile);
-        } else if(args[0]=="-p"){
-            ProcessPivot(srcFile);
-        } else if(args[0]=="-i"){
+        } else if(args.Length==4 && args[0]=="-p"){
+            int leaving = int.Parse(args[2]);
+            int entering = int.Parse(args[3]);
+            ProcessPivot(srcFile,leaving,entering);
+        } else if(args.Length==2 && args[0]=="-i"){
             ProcessInitializer(srcFile);
-        } else if(args[0]=="-s"){
+        } else if(args.Length==2 && args[0]=="-s"){
             ProcessSimplex(srcFile);
         } else {
-            Console.WriteLine($"uncknown flag {args[0]}");
             Help();
         }
     }
