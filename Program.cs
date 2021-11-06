@@ -445,6 +445,9 @@ class Solution{
             return new SimplexAnswer(new Canonic(standartic));
         }
         Console.WriteLine("Start sol bad");
+
+        Console.WriteLine("Task original:");
+        standartic.Print();
         
         // переходим к вспомогательной задаче
         Standartic aux = standartic.getAUX();
@@ -465,6 +468,7 @@ class Solution{
 
         // основной цикл поиска решения
         double[] delta=new double[c_aux.m];
+        Console.WriteLine("CircloFor");
         for(;;){
             //c_aux.Print();
             int e=-1;
@@ -484,12 +488,6 @@ class Solution{
                     delta[equality]=double.PositiveInfinity;
                 }
             }
-            /*Console.Write("delta: ");
-            for(int equality=0;equality<delta.Length;equality++){
-                Console.Write("{0}/{1}={2} ",c_aux.b[equality],
-                    c_aux.A[equality][e],delta[equality]);
-            }
-            Console.WriteLine();//*/
             int l_equality=0;
             for(int i=1;i<c_aux.B.Length;i++){
                 if(delta[i]<delta[l_equality]){
@@ -497,8 +495,9 @@ class Solution{
                 }
             }
             int l=c_aux.B[l_equality];
-            //Console.WriteLine("e={0} l={1}",e,l);
+            Console.WriteLine("pivoting l={0} e={1} ...",l,e);
             c_aux = c_aux.Pivot(l,e);
+            //c_aux.Print();
         }
 
         if(c_aux.getVariableNValue(additionalVariable)!=0){
