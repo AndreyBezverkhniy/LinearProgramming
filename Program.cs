@@ -61,8 +61,11 @@ class Utils{
         return true;
     }
     public static void PrintVector(double[] v){
-        for(int i=0;i<v.Length;i++){
-            Console.Write("[{0}]={1} ",i,v[i]);
+        if(v.Length>0){
+            Console.Write("{0}",v[0]);
+            for(int i=1;i<v.Length;i++){
+                Console.Write(" {0}",v[i]);
+            }
         }
         Console.WriteLine();
     }
@@ -404,7 +407,6 @@ class Solution{
         // поиск оптимального решения
         Canonic canonic=startingSolution.canonic;
         for(;;){
-            canonic.Print();
             // поиск вводимой переменной
             int e=-1;
             for(int i=0;i<canonic.n;i++){
@@ -420,8 +422,8 @@ class Solution{
             // поиск возможных приращения вводимой переменной
             double[] delta=new double[canonic.m];
             for(int equality=0;equality<canonic.B.Length;equality++){
-                if(canonic.A[equality][e]>0){
-                    delta[equality]=canonic.b[equality]/canonic.A[equality][e];
+                if(canonic.A[equality][e]<0){
+                    delta[equality]=-canonic.b[equality]/canonic.A[equality][e];
                 } else {
                     delta[equality]=double.PositiveInfinity;
                 }
@@ -435,7 +437,7 @@ class Solution{
             }
             // отслеживание случая неограниченности задачи
             if(double.IsPositiveInfinity(delta[l_equality])){
-                return new SimplexAnswer("Задача неограничена");
+                return new SimplexAnswer("infinite solution");
             }
             // переход от старой вершины симплекса к новой
             int l=canonic.B[l_equality];
@@ -567,7 +569,16 @@ class Program{
         Console.WriteLine("{0}",allowed?"true":"false");
     }
     static void ProcessSimplex(string file){
-        Console.WriteLine("not implemented yet");
+        Standartic standartic=new Standartic();
+        standartic.LoadFromFile(file);
+        SimplexAnswer simplexAnswer = Solution.Simplex(standartic);
+        if(simplexAnswer.type!="solved"){
+            Console.WriteLine($"{simplexAnswer.type}");
+            return;
+        }
+        Canonic canonic = simplexAnswer.canonic;
+        double[] X=canonic.getXValue();
+        Utils.PrintVector(X);
     }
     static void Main(string[] args){
         if(args.Length<2){

@@ -14,9 +14,9 @@ do
 		DIFF=$(diff "$out" "$expected")
 		if [ "$DIFF" == "" ]
 		then
-			echo "$file: out==expected OK"
+			echo "	$file:	out==expected OK"
 		else
-			echo "$file: out!=expected FAILED"
+			echo "	$file:	out!=expected FAILED"
 		fi
 	done
 done
