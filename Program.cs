@@ -60,6 +60,12 @@ class Utils{
         }
         return true;
     }
+    public static void PrintVector(double[] v){
+        for(int i=0;i<v.Length;i++){
+            Console.Write("[{0}]={1} ",i,v[i]);
+        }
+        Console.WriteLine();
+    }
 }
 
 class Standartic{
@@ -208,14 +214,14 @@ class Canonic{
         }
     }
     public Canonic(Standartic standartic,Canonic canonic_aux)
-    :this(canonic_aux.n,canonic_aux.m){
+    :this(canonic_aux.n-1,canonic_aux.m){
         // задачи должны совпадать по кол-ву исходных переменных и ограничений
         if(canonic_aux.n!=standartic.n+standartic.m+1 ||
         canonic_aux.m!=standartic.m){
             throw new Exception();
         }
         // при необходимости выводим дополнительную переменную из базиса
-        int additionalVariable=standartic.getAdditionalVariableIndexAUX();
+        int additionalVariable=standartic.getAUX().getAdditionalVariableIndexAUX();
         int entering=-1;
         int leaving;
         if(Utils.DoesArrayConsistsElement(canonic_aux.B,additionalVariable)){
@@ -229,7 +235,7 @@ class Canonic{
             }
             canonic_aux = canonic_aux.Pivot(leaving,entering);
         }
-        // избавляемяс от дополнительной переменной
+        // избавляемcя от дополнительной переменной в ограничениях
         for(int j=0;j<m;j++){
             for(int i=0;i<n;i++){
                 if(i<additionalVariable){
@@ -243,20 +249,21 @@ class Canonic{
         // берём неизменные данные
         Utils.copyArrays(ref b,canonic_aux.b);
         Utils.copyArrays(ref B,canonic_aux.B);
-        // возвращаем первоначальную функцию
+        // избавляемcя от дополнительной переменной в функции
         v=0;
         for(int i=0;i<n;i++){
-            if(i<standartic.n){
-                c[i]=standartic.c[i];
-            } else {
-                c[i]=0;
+            if(i<additionalVariable){
+                c[i]=canonic_aux.c[i];
+            }
+            if(i>additionalVariable){
+                c[i-1]=canonic_aux.c[i];
             }
         }
         // избавляемся от базовых переменных в функции
         for(int i=0;i<n;i++){
             if(Utils.DoesArrayConsistsElement(B,i)){
                 // базовая перемнная i используется в z
-                int equation=B[i];
+                int equation=equalityByBasic(i);
                 substituteVariableInEquation(i,A[equation],b[equation],ref c,ref v);
             }
         }
@@ -439,36 +446,22 @@ class Solution{
     public static SimplexAnswer Initialize(Standartic standartic){
         // проверка допустимости начального решения
         int index_min_b=standartic.getMinBIndex();
-        Console.WriteLine("index_min_b={0}",index_min_b);
         if(standartic.b[index_min_b]>=0){
-            Console.WriteLine("Start sol ok");
             return new SimplexAnswer(new Canonic(standartic));
         }
-        Console.WriteLine("Start sol bad");
-
-        Console.WriteLine("Task original:");
-        standartic.Print();
         
         // переходим к вспомогательной задаче
         Standartic aux = standartic.getAUX();
-        Console.WriteLine("AUX:");
-        aux.Print();
         Canonic c_aux = new Canonic(aux);
-        Console.WriteLine("C_AUX:");
-        c_aux.Print();
 
         // выводимой переменной соответствует макс по модулю отрицательное b
         int leaving=c_aux.B[index_min_b];
         int additionalVariable=aux.getAdditionalVariableIndexAUX();
         int entering=additionalVariable;
-        Console.WriteLine("Initial pivot l={0} e={1}:",leaving,entering);
         c_aux = c_aux.Pivot(leaving,entering);
-        Console.WriteLine("After initial pivot");
-        c_aux.Print();
 
         // основной цикл поиска решения
         double[] delta=new double[c_aux.m];
-        Console.WriteLine("CircloFor");
         for(;;){
             //c_aux.Print();
             int e=-1;
@@ -482,22 +475,20 @@ class Solution{
                 break;
             }
             for(int equality=0;equality<c_aux.B.Length;equality++){
-                if(c_aux.A[equality][e]>0){
-                    delta[equality]=c_aux.b[equality]/c_aux.A[equality][e];
+                if(c_aux.A[equality][e]<0){
+                    delta[equality]=-c_aux.b[equality]/c_aux.A[equality][e];
                 } else {
                     delta[equality]=double.PositiveInfinity;
                 }
             }
             int l_equality=0;
-            for(int i=1;i<c_aux.B.Length;i++){
+            for(int i=0;i<c_aux.B.Length;i++){
                 if(delta[i]<delta[l_equality]){
                     l_equality=i;
                 }
             }
             int l=c_aux.B[l_equality];
-            Console.WriteLine("pivoting l={0} e={1} ...",l,e);
             c_aux = c_aux.Pivot(l,e);
-            //c_aux.Print();
         }
 
         if(c_aux.getVariableNValue(additionalVariable)!=0){
