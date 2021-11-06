@@ -52,6 +52,14 @@ class Utils{
             dst[i]=src[i];
         }
     }
+    public static bool isNullVector(double[] v){
+        for(int i=0;i<v.Length;i++){
+            if(v[i]!=0){
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 class Standartic{
@@ -123,7 +131,20 @@ class Standartic{
         return index_min_b;
     }
     public int getAdditionalVariableIndexAUX(){
-        return n;
+        // usage only in aux-ed Standartic
+        return n-1;
+    }
+    public bool checkXAllowability(double[] X){
+        for(int i=0;i<m;i++){
+            double left=0;
+            for(int j=0;j<n;j++){
+                left+=A[i][j]*X[j];
+            }
+            if(left>b[i]){
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -330,13 +351,20 @@ class Canonic{
         PivotRecalculateFunction(ref result,leaving,entering);
         return result;
     }
-    public double getVariableXNValue(int index){
+    public double getVariableNValue(int index){
         for(int i=0;i<m;i++){
             if(B[i]==index){
                 return b[i];
             }
         }
         return 0;
+    }
+    public double[] getXValue(){
+        double[] res = new double[n-m];
+        for(int i=0;i<n-m;i++){
+            res[i]=getVariableNValue(i);
+        }
+        return res;
     }
 }
 
@@ -353,7 +381,7 @@ class SimplexAnswer{
     }
     public void PrintAnswer(){
         for(int i=0;i<canonic.n;i++){
-            Console.Write("x{0}={1} ",i,canonic.getVariableXNValue(i));
+            Console.Write("x{0}={1} ",i,canonic.getVariableNValue(i));
         }
         Console.WriteLine();
     }
@@ -416,16 +444,24 @@ class Solution{
             Console.WriteLine("Start sol ok");
             return new SimplexAnswer(new Canonic(standartic));
         }
+        Console.WriteLine("Start sol bad");
         
         // переходим к вспомогательной задаче
         Standartic aux = standartic.getAUX();
+        Console.WriteLine("AUX:");
+        aux.Print();
         Canonic c_aux = new Canonic(aux);
+        Console.WriteLine("C_AUX:");
+        c_aux.Print();
 
         // выводимой переменной соответствует макс по модулю отрицательное b
         int leaving=c_aux.B[index_min_b];
         int additionalVariable=aux.getAdditionalVariableIndexAUX();
         int entering=additionalVariable;
+        Console.WriteLine("Initial pivot l={0} e={1}:",leaving,entering);
         c_aux = c_aux.Pivot(leaving,entering);
+        Console.WriteLine("After initial pivot");
+        c_aux.Print();
 
         // основной цикл поиска решения
         double[] delta=new double[c_aux.m];
@@ -465,8 +501,8 @@ class Solution{
             c_aux = c_aux.Pivot(l,e);
         }
 
-        if(c_aux.getVariableXNValue(aux.n)!=0){
-            return new SimplexAnswer("Задача неразрешима");
+        if(c_aux.getVariableNValue(additionalVariable)!=0){
+            return new SimplexAnswer("no solutions");
         }
         
         // переход от вспомогательной задачи к основной
@@ -523,7 +559,22 @@ class Program{
         canonic.Print();
     }
     static void ProcessInitializer(string file){
-        Console.WriteLine("not implemented yet");
+        Standartic standartic=new Standartic();
+        standartic.LoadFromFile(file);
+        SimplexAnswer simplexAnswer = Solution.Initialize(standartic);
+        if(simplexAnswer.type!="solved"){
+            Console.WriteLine($"{simplexAnswer.type}");
+            return;
+        }
+        Canonic canonic = simplexAnswer.canonic;
+        double[] X=canonic.getXValue();
+        if(Utils.isNullVector(X)){
+            Console.WriteLine("null vector");
+        } else {
+            Console.WriteLine("not null vector");
+        }
+        bool allowed=standartic.checkXAllowability(X);
+        Console.WriteLine("{0}",allowed?"true":"false");
     }
     static void ProcessSimplex(string file){
         Console.WriteLine("not implemented yet");

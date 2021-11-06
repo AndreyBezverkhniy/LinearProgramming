@@ -1,7 +1,4 @@
 cmd testing
-	standard.read
-	standard2canonic
-	pivot
-	simplex
 	initializer
+	simplex
 
