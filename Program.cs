@@ -165,8 +165,9 @@ class Canonic{
         A = new double[standartic.m][]; // расширение матрицы стандартной формы
         for (int i=0;i<standartic.m;i++) {
             A[i] = new double[standartic.n+standartic.m];
+            // перенос в правую часть с изменением знака
             for(int j=0;j<standartic.n;j++){
-                A[i][j]=standartic.A[i][j];
+                A[i][j]=-standartic.A[i][j];
             }
             for(int j=standartic.n;j<standartic.n+standartic.m;j++){
                 A[i][j]=0;
@@ -192,7 +193,7 @@ class Canonic{
         canonic_aux.m!=standartic.m){
             throw new Exception();
         }
-        // при необходимости выводим дополнительную переменную из юазиса
+        // при необходимости выводим дополнительную переменную из базиса
         int additionalVariable=standartic.getAdditionalVariableIndexAUX();
         int entering=-1;
         int leaving;
@@ -263,7 +264,7 @@ class Canonic{
         for(int i=0;i<m;i++){
             Console.Write("x{0} = {1}",B[i],b[i]);
             for(int j=0;j<n;j++){
-                Console.Write(" - ({0})*x{1}",A[i][j],j);
+                Console.Write(" + ({0})*x{1}",A[i][j],j);
             }
             Console.WriteLine();
         }
@@ -281,13 +282,13 @@ class Canonic{
         if(coefficients[entering]==0){
             throw new Exception();
         }
-        freeMember/=coefficients[entering];
+        freeMember/=-coefficients[entering];
         coefficients[leaving]=1.0/coefficients[entering];
         for(int i=0;i<n;i++){
             if(i==leaving || i==entering){
                 continue;
             }
-            coefficients[i]/=coefficients[entering];
+            coefficients[i]/=-coefficients[entering];
         }
         coefficients[entering]=0;
     }
@@ -299,37 +300,34 @@ class Canonic{
             if(i==variable){
                 continue;
             }
-            coefficients[i]=coefficients[i]+coefficients[variable]*vCoefficients[i];
+            coefficients[i]+=vCoefficients[i]*coefficients[variable];
         }
         coefficients[variable]=0;
     }
-    private void PivotRecalculateRestrictions(int leaving,int entering){
+    private void PivotRecalculateRestrictions(ref Canonic result,int leaving,
+    int entering){
         int equality = equalityByBasic(leaving);
-        B[equality]=entering;
-        exchangeVariablesInEquation(leaving,entering,ref A[equality],
-        ref b[equality]);
+        result.B[equality]=entering;
+        exchangeVariablesInEquation(leaving,entering,ref result.A[equality],
+        ref result.b[equality]);
         for(int i=0;i<m;i++){
             if(i==equality){
                 continue;
             }
-            substituteVariableInEquation(entering,A[equality],b[equality],
-            ref A[i],ref b[i]);
+            substituteVariableInEquation(entering,result.A[equality],result.b[equality],
+            ref result.A[i],ref result.b[i]);
         }
     }
-    private void PivotRecalculateFunction(int leaving,int entering){
-        int equality = equalityByBasic(leaving);
-        substituteVariableInEquation(entering,A[equality],b[equality],ref c,
-        ref v);
-    }
-    private void PivotRedivideBasics(int leaving,int entering){
-        int equality = equalityByBasic(leaving);
-        B[equality]=entering;
+    private void PivotRecalculateFunction(ref Canonic result,int leaving,
+    int entering){
+        int equation = equalityByBasic(leaving);
+        substituteVariableInEquation(entering,result.A[equation],
+        result.b[equation],ref result.c,ref result.v);
     }
     public Canonic Pivot(int leaving,int entering){
         Canonic result=new Canonic(this);
-        PivotRecalculateRestrictions(leaving,entering);
-        PivotRecalculateFunction(leaving,entering);
-        PivotRedivideBasics(leaving,entering);
+        PivotRecalculateRestrictions(ref result,leaving,entering);
+        PivotRecalculateFunction(ref result,leaving,entering);
         return result;
     }
     public double getVariableXNValue(int index){
@@ -515,6 +513,12 @@ class Program{
         Standartic standartic=new Standartic();
         standartic.LoadFromFile(file);
         Canonic canonic = new Canonic(standartic);
+        if(leaving==-1){
+            leaving = standartic.n; // first additional variable by default
+        }
+        if(entering==-1){
+            entering = 0; // first original variable by default
+        }
         canonic = canonic.Pivot(leaving,entering);
         canonic.Print();
     }
@@ -525,14 +529,28 @@ class Program{
         Console.WriteLine("not implemented yet");
     }
     static void Main(string[] args){
+        if(args.Length<2){
+            Help();
+            return;
+        }
         string srcFile=args[1];
         if(args.Length==2 && args[0]=="-sr"){
             ProcessStandarticRead(srcFile);
         } else if(args.Length==2 && args[0]=="-s2c"){
             ProcessStandarticToCanonic(srcFile);
-        } else if(args.Length==4 && args[0]=="-p"){
-            int leaving = int.Parse(args[2]);
-            int entering = int.Parse(args[3]);
+        } else if(args.Length>=2 && args.Length<=4 && args[0]=="-p"){
+            int leaving;
+            int entering;
+            if(args.Length>=3){
+                leaving = int.Parse(args[2]);
+            } else {
+                leaving=-1; // default leaving
+            }
+            if(args.Length>=4){
+                entering = int.Parse(args[3]);
+            } else {
+                entering = -1; // default enterin
+            }
             ProcessPivot(srcFile,leaving,entering);
         } else if(args.Length==2 && args[0]=="-i"){
             ProcessInitializer(srcFile);
