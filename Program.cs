@@ -611,22 +611,9 @@ class ZSolution{
         return SolveZLP2(standartic);
     }
     public static SimplexAnswer SolveZLP2(Standartic task){
-        Console.WriteLine("{0}{{ ",task.getHash());
-        SimplexAnswer res=SolveZLP2_C(task);
-        Console.WriteLine("}");
-        return res;
-    }
-    public static SimplexAnswer SolveZLP2_C(Standartic task){
     // SolveZLP2 возвращает решение не хуже functionZMax, либо "denied"
         SimplexAnswer task_solution = Solution.Simplex(task);
         Canonic task_canonic = task_solution.canonic;
-        Console.WriteLine("===");
-        task.Print();
-        Utils.PrintVector(task_canonic.getXValue());
-        Console.WriteLine("===");
-        if(task.m>=18){
-            Console.ReadLine();
-        }
         if(task_solution.type=="no solutions" || task_solution.type=="solved"
         && task_canonic.getFunctionValue()<functionZMax){
             return new SimplexAnswer("denied");
