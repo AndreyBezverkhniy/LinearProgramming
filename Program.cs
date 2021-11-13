@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+
 class Utils{
     public static bool DoesArrayConsistsElement(int[] arr,int element){
         for(int i=0;i<arr.Length;i++){
@@ -69,6 +70,9 @@ class Utils{
         }
         Console.WriteLine();
     }
+    public static bool isInt(double x){
+        return x==(double)((int)x);
+    }
 }
 
 class Standartic{
@@ -78,6 +82,30 @@ class Standartic{
     public double[] b; // свободные члены (правая часть неравенств)
     public double[] c; // вектор коэффициентов в целевой функции
     public Standartic(){} // по умолчанию ничего не существует
+    public Standartic(Standartic copy):this(copy.n,copy.m){
+        for(int i=0;i<b.Length;i++){
+            b[i]=copy.b[i];
+        }
+        for(int i=0;i<c.Length;i++){
+            c[i]=copy.c[i];
+        }
+        for(int i=0;i<A.Length;i++){
+            for(int j=0;j<A[i].Length;j++){
+                A[i][j]=copy.A[i][j];
+            }
+        }
+
+    }
+    public Standartic(int _n,int _m){
+        n=_n;
+        m=_m;
+        b=new double[_m];
+        c=new double[_n];
+        A=new double[_m][];
+        for(int i=0;i<_m;i++){
+            A[i]=new double[_n];
+        }
+    }
     public void LoadFromFile(string path){
         StreamReader file;
         file = new StreamReader(path);
@@ -154,6 +182,59 @@ class Standartic{
             }
         }
         return true;
+    }
+    public void addRestriction(int variable,string inequality,double number){
+        double sign;
+        if(inequality=="<="){
+            sign=+1;
+        } else if(inequality==">="){
+            sign=-1;
+        } else {
+            throw new Exception(); // forbidden or unknown inequality
+        }
+        int _m=m+1;
+        double[] _b=new double[_m];
+        double[][] _A=new double[_m][];
+        for(int i=0;i<m;i++){
+            _b[i]=b[i];
+            _A[i]=A[i];
+        }
+        _b[_m-1]=number*sign;
+        _A[_m-1]=new double[n];
+        for(int i=0;i<n;i++){
+            if(i==variable){
+                _A[_m-1][i]=sign;
+            } else {
+                _A[_m-1][i]=0;
+            }
+        }
+        A=_A;
+        b=_b;
+        m=_m;
+    }
+    public uint getHash(){
+        double hash=0;
+        double basis=3;
+        double multiplier=1;
+        hash+=multiplier*n;
+        multiplier=(multiplier>256)?1:(multiplier*basis);
+        hash+=multiplier*m;
+        multiplier=(multiplier>256)?1:(multiplier*basis);
+        for(int i=0;i<n;i++){
+            hash+=multiplier*c[i];
+            multiplier=(multiplier>256)?1:(multiplier*basis);
+        }
+        for(int i=0;i<m;i++){
+            hash+=multiplier*b[i];
+            multiplier=(multiplier>256)?1:(multiplier*basis);
+        }
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                hash+=multiplier*A[i][j];
+                multiplier=(multiplier>256)?1:(multiplier*basis);
+            }
+        }
+        return (uint)hash;
     }
 }
 
@@ -376,6 +457,12 @@ class Canonic{
         }
         return res;
     }
+    public double getFunctionValue(){
+        return v;
+    }
+    public int getOriginalVariableAmount(){
+        return n-m;
+    }
 }
 
 class SimplexAnswer{
@@ -503,6 +590,70 @@ class Solution{
     }
 }
 
+class ZSolution{
+    public static double functionZMax;
+    public static SimplexAnswer SolveZLP(Standartic standartic){
+        Canonic canonic = new Canonic(standartic);
+        SimplexAnswer solution = Solution.Simplex(standartic);
+        if(solution.type=="no solutions" || solution.type=="infinite solution"){
+            return solution;
+        }
+        // конечное решение существует
+        functionZMax = double.NegativeInfinity;
+        return SolveZLP2(standartic);
+    }
+    public static SimplexAnswer SolveZLP2(Standartic task){
+        Console.WriteLine("{0}{{",task.getHash());
+        SimplexAnswer res = SolveZLP2_C(task);
+        Console.WriteLine("}");
+        return res;
+    }
+    public static SimplexAnswer SolveZLP2_C(Standartic task){
+    // SolveZLP2 возвращает решение не хуже functionZMax, либо "denied"
+        task.Print();
+        SimplexAnswer task_solution = Solution.Simplex(task);
+        Utils.PrintVector(task_solution.canonic.getXValue());
+        Canonic task_canonic = task_solution.canonic;
+        if(task_solution.type=="no solutions" || task_solution.type=="solved"
+        && task_canonic.getFunctionValue()<functionZMax){
+            return new SimplexAnswer("denied");
+        }
+        // поиск нецелочисленной компоненты решения
+        int notZVariableIndex=-1;
+        for(int i=0;i<task_canonic.getOriginalVariableAmount();i++){
+            if(!Utils.isInt(task_canonic.getVariableNValue(i))){
+                notZVariableIndex=i;
+                break;
+            }
+        }
+        if(notZVariableIndex==-1){
+            // найдено целочисленное решение
+            return task_solution;
+        }
+        double notZVariableValue = task_canonic.getVariableNValue(notZVariableIndex);
+        double ceiling=Math.Ceiling(notZVariableValue);
+        double floor=Math.Floor(notZVariableValue);
+        Standartic task1 = new Standartic(task);
+        task1.addRestriction(notZVariableIndex,"<=",floor);
+        Standartic task2 = new Standartic(task);
+        task2.addRestriction(notZVariableIndex,">=",ceiling);
+        SimplexAnswer solution1=SolveZLP2(task1);
+        SimplexAnswer solution2=SolveZLP2(task2);
+        if(solution1.type=="denied"){
+            return solution2;
+        }
+        if(solution2.type=="denied"){
+            return solution1;
+        }
+        double z1=solution1.canonic.getFunctionValue();
+        double z2=solution2.canonic.getFunctionValue();
+        if(z1>=z2){
+            return solution1;
+        }
+        return solution2;
+    }
+}
+
 class Program{
     static void Help(){
         Console.WriteLine("usage:");
@@ -518,6 +669,8 @@ class Program{
             "and shows resulting canonic form");
         Console.WriteLine("\t-s src-file");
         Console.WriteLine("\t\treads task, solves it and shows answer");
+        Console.WriteLine("\t-z src-file");
+        Console.WriteLine("\t\treads task, solves it as ZLP and shows answer");
         Console.WriteLine("Format of task file:");
         Console.WriteLine("\tn # оригинальных переменных\n"+
             "\tm # уравнений\n"+
@@ -580,6 +733,18 @@ class Program{
         double[] X=canonic.getXValue();
         Utils.PrintVector(X);
     }
+    static void ProcessZLP(string file){
+        Standartic standartic=new Standartic();
+        standartic.LoadFromFile(file);
+        SimplexAnswer simplexAnswer = ZSolution.SolveZLP(standartic);
+        if(simplexAnswer.type!="solved"){
+            Console.WriteLine($"{simplexAnswer.type}");
+            return;
+        }
+        Canonic canonic = simplexAnswer.canonic;
+        double[] X=canonic.getXValue();
+        Utils.PrintVector(X);
+    }
     static void Main(string[] args){
         if(args.Length<2){
             Help();
@@ -608,6 +773,8 @@ class Program{
             ProcessInitializer(srcFile);
         } else if(args.Length==2 && args[0]=="-s"){
             ProcessSimplex(srcFile);
+        } else if(args.Length==2 && args[0]=="-z"){
+            ProcessZLP(srcFile);
         } else {
             Help();
         }
