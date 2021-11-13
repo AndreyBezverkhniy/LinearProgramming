@@ -333,15 +333,19 @@ class Canonic{
         // берём неизменные данные
         Utils.copyArrays(ref b,canonic_aux.b);
         Utils.copyArrays(ref B,canonic_aux.B);
-        // избавляемcя от дополнительной переменной в функции
+        for(int i=0;i<m;i++){
+            if(B[i]>=standartic.n){
+                // т.к. удалили переменную n, остальные сместились по индексу
+                B[i]--;
+            }
+        }
+        // и возвращаем оригинальную функцию
         v=0;
-        for(int i=0;i<n;i++){
-            if(i<additionalVariable){
-                c[i]=canonic_aux.c[i];
-            }
-            if(i>additionalVariable){
-                c[i-1]=canonic_aux.c[i];
-            }
+        for(int i=0;i<standartic.n;i++){
+            c[i]=standartic.c[i];
+        }
+        for(int i=standartic.n;i<standartic.n+standartic.m;i++){
+            c[i]=0;
         }
         // избавляемся от базовых переменных в функции
         for(int i=0;i<n;i++){
@@ -603,16 +607,8 @@ class ZSolution{
         return SolveZLP2(standartic);
     }
     public static SimplexAnswer SolveZLP2(Standartic task){
-        Console.WriteLine("{0}{{",task.getHash());
-        SimplexAnswer res = SolveZLP2_C(task);
-        Console.WriteLine("}");
-        return res;
-    }
-    public static SimplexAnswer SolveZLP2_C(Standartic task){
     // SolveZLP2 возвращает решение не хуже functionZMax, либо "denied"
-        task.Print();
         SimplexAnswer task_solution = Solution.Simplex(task);
-        Utils.PrintVector(task_solution.canonic.getXValue());
         Canonic task_canonic = task_solution.canonic;
         if(task_solution.type=="no solutions" || task_solution.type=="solved"
         && task_canonic.getFunctionValue()<functionZMax){
