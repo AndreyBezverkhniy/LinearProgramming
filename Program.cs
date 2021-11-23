@@ -599,7 +599,7 @@ class Solution{
 }
 
 class ZSolution{
-    public static double functionZMax;
+    private static double functionZMax;
     public static SimplexAnswer SolveZLP(Standartic standartic){
         Canonic canonic = new Canonic(standartic);
         SimplexAnswer solution = Solution.Simplex(standartic);
@@ -610,7 +610,7 @@ class ZSolution{
         functionZMax = double.NegativeInfinity;
         return SolveZLP2(standartic);
     }
-    public static SimplexAnswer SolveZLP2(Standartic task){
+    private static SimplexAnswer SolveZLP2(Standartic task){
     // SolveZLP2 возвращает решение не хуже functionZMax, либо "denied"
         SimplexAnswer task_solution = Solution.Simplex(task);
         Canonic task_canonic = task_solution.canonic;
@@ -766,7 +766,7 @@ class Program{
             if(args.Length>=4){
                 entering = int.Parse(args[3]);
             } else {
-                entering = -1; // default enterin
+                entering = -1; // default entering
             }
             ProcessPivot(srcFile,leaving,entering);
         } else if(args.Length==2 && args[0]=="-i"){
