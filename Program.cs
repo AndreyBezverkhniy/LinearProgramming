@@ -325,7 +325,7 @@ class Canonic{
         }
         // избавляемcя от дополнительной переменной в ограничениях
         for(int j=0;j<m;j++){
-            for(int i=0;i<n;i++){
+            for(int i=0;i<canonic_aux.n;i++){
                 if(i<additionalVariable){
                     A[j][i]=canonic_aux.A[j][i];
                 }
